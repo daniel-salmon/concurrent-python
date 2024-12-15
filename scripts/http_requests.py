@@ -1,9 +1,11 @@
 import logging
 import sys
+from functools import wraps
 from pathlib import Path
 from queue import Queue
 from random import randint
 from threading import Thread
+from time import sleep
 from typing import Any, Callable
 
 import requests
@@ -21,6 +23,33 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 logger.info(f"GIL enabled?: {sys._is_gil_enabled()}")  # type: ignore
+
+
+class ExceededRetriesError(Exception):
+    pass
+
+
+def retry_with_backoff(attempts: int, duration_seconds: int = 1, multiplier: int = 2):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            nonlocal duration_seconds
+            for attempt in range(1, attempts + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception:
+                    logger.exception(
+                        f"Error occurred during attempt {attempt}/{attempts} of running function '{func.__name__}' on {(args, kwargs)}"
+                    )
+                sleep(duration_seconds)
+                duration_seconds *= multiplier
+            raise ExceededRetriesError(
+                f"Failed after {attempts} attempts to run function '{func.__name__}' on process {(args, kwargs)}"
+            )
+
+        return wrapper
+
+    return decorator
 
 
 class ClosableQueue(Queue):
@@ -72,6 +101,7 @@ class Worker(Thread):
                     logger.info(f"Worker {self.worker_num} processed {counter} items")
 
 
+@retry_with_backoff(attempts=3)
 def work(url: str, params: dict[str, Any]) -> str:
     response = requests.get(url, params=params)
     response.raise_for_status()
