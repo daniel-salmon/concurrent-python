@@ -144,5 +144,6 @@ for worker in workers:
 exception_queue.close()
 for item in exception_queue:
     logger.info(f"Could not process {item}")
+exception_queue.join()
 
 logger.info("Done")
