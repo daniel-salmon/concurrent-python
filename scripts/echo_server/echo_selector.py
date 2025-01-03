@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    logging.info(f"Starting server on {ADDRESS}")
+    logger.info(f"Starting server on {ADDRESS}")
     server = socket.socket(AF_INET, SOCK_STREAM)
     server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     server.setblocking(False)
@@ -43,7 +43,7 @@ def listen_and_serve(
                 connection, address = server.accept()
                 connection.setblocking(False)
                 selector.register(connection, selectors.EVENT_READ)
-                logging.info(f"New connection from {address}")
+                logger.info(f"New connection from {address}")
             else:
                 data = sock.recv(CHUNK_SIZE)
                 sock.sendall(data)

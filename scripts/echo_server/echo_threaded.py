@@ -27,7 +27,7 @@ def main():
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         while True:
             connection, address = server.accept()
-            logging.info(f"Connection on {address}")
+            logger.info(f"Connection on {address}")
             _ = executor.submit(handle, connection)
 
 
@@ -37,7 +37,7 @@ def handle(connection: socket.socket) -> None:
             data = read_bytes(connection, CHUNK_SIZE)
             connection.sendall(data)
     except Exception as e:
-        logging.exception(e)
+        logger.exception(e)
     finally:
         connection.close()
 
