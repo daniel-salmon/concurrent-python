@@ -46,7 +46,7 @@ def read_bytes(connection: socket.socket, chunk_size: int) -> bytes:
     data = []
     while True:
         buffer = connection.recv(chunk_size)
-        data += [buffer]
+        data.append(buffer)
         if buffer[-2:] == b"\r\n":
             return b"".join(data)
 
